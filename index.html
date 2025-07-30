@@ -1,102 +1,75 @@
 <!DOCTYPE html>
 <html lang="gu">
 <head>
-  <meta charset="UTF-8">
-  <title>Sarva Manglya - Payment Receipt</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sarva Manglya Payment Receipt</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <style>
-    body { font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; }
-    label { display: block; margin-top: 10px; }
-    .month-list label { display: inline-block; width: 100px; }
-    button { margin-top: 20px; padding: 10px 20px; }
-  </style>
+  <script src="gujarati-font.js"></script> <!-- Converted .ttf to .js font file -->
 </head>
 <body>
-  <h2>Sarva Manglya Co-Operative Society</h2>
-  <p>મેઇન્ટેનન્સ ચુકવણી ફોર્મ</p>
-
-  <label>નામ:
-    <input type="text" id="name" required>
-  </label>
-
-  <label>ફ્લેટ નં.:
-    <input type="text" id="flat" required>
-  </label>
-
-  <label>સંપર્ક નં.:
-    <input type="text" id="contact" required>
-  </label>
-
-  <label>વર્ષ:
-    <input type="number" id="year" min="2020" max="2099" required>
-  </label>
-
-  <label>મહિના:
-    <div class="month-list">
-      <label><input type="checkbox" name="month[]" value="જાન્યુઆરી"> જાન્યુઆરી</label>
-      <label><input type="checkbox" name="month[]" value="ફેબ્રુઆરી"> ફેબ્રુઆરી</label>
-      <label><input type="checkbox" name="month[]" value="માર્ચ"> માર્ચ</label>
-      <label><input type="checkbox" name="month[]" value="એપ્રિલ"> એપ્રિલ</label>
-      <label><input type="checkbox" name="month[]" value="મે"> મે</label>
-      <label><input type="checkbox" name="month[]" value="જૂન"> જૂન</label>
-      <label><input type="checkbox" name="month[]" value="જુલાઈ"> જુલાઈ</label>
-      <label><input type="checkbox" name="month[]" value="ઑગસ્ટ"> ઑગસ્ટ</label>
-      <label><input type="checkbox" name="month[]" value="સપ્ટેમ્બર"> સપ્ટેમ્બર</label>
-      <label><input type="checkbox" name="month[]" value="ઑક્ટોબર"> ઑક્ટોબર</label>
-      <label><input type="checkbox" name="month[]" value="નવેમ્બર"> નવેમ્બર</label>
-      <label><input type="checkbox" name="month[]" value="ડિસેમ્બર"> ડિસેમ્બર</label>
-    </div>
-  </label>
-
-  <label>ચુકવણી રકમ (રૂ.):
-    <input type="number" id="amount" required>
-  </label>
-
-  <label>ચુકવણી પદ્ધતિ:
-    <select id="mode" required>
-      <option value="Online">Online</option>
-      <option value="Cash">Cash</option>
-      <option value="Cheque">Cheque</option>
-    </select>
-  </label>
-
-  <label>ચુકવણી વિગતો:
-    <textarea id="details" rows="3" placeholder="Transaction ID, Bank Name, Cheque No. વગેરે"></textarea>
-  </label>
-
-  <button onclick="generatePDF()">પીડીએફ જનરેટ કરો</button>
+  <h1>Sarva Manglya Co-Operative Society</h1>
+  <form id="receiptForm">
+    <label>નામ: <input type="text" id="name" required></label><br>
+    <label>ફ્લેટ નંબર: <input type="text" id="flat" required></label><br>
+    <label>મોબાઇલ નંબર: <input type="text" id="contact" required></label><br>
+    <label>વર્ષ: <input type="number" id="year" value="2025" required></label><br>
+    <label>મહિનો:</label><br>
+    <input type="checkbox" name="month" value="જાન્યુઆરી"> જાન્યુઆરી
+    <input type="checkbox" name="month" value="ફેબ્રુઆરી"> ફેબ્રુઆરી
+    <input type="checkbox" name="month" value="માર્ચ"> માર્ચ
+    <!-- Add more months as needed -->
+    <br>
+    <label>ચુકવણી પ્રકાર:
+      <select id="paymentMode">
+        <option value="Online">Online</option>
+        <option value="Cash">Cash</option>
+        <option value="Cheque">Cheque</option>
+      </select>
+    </label><br>
+    <label>ચુકવણી રકમ: ₹ <input type="number" id="amount" required></label><br>
+    <label>ચુકવણી વિગત: <input type="text" id="details"></label><br>
+    <button type="submit">Generate PDF</button>
+  </form>
 
   <script>
-    async function generatePDF() {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
+    const { jsPDF } = window.jspdf;
+
+    document.getElementById("receiptForm").addEventListener("submit", function (e) {
+      e.preventDefault();
 
       const name = document.getElementById("name").value;
       const flat = document.getElementById("flat").value;
       const contact = document.getElementById("contact").value;
       const year = document.getElementById("year").value;
-      const months = Array.from(document.querySelectorAll("input[name='month[]']:checked")).map(cb => cb.value);
+      const paymentMode = document.getElementById("paymentMode").value;
       const amount = document.getElementById("amount").value;
-      const mode = document.getElementById("mode").value;
       const details = document.getElementById("details").value;
-      const date = new Date().toLocaleDateString('gu-IN');
+      const months = Array.from(document.querySelectorAll("input[name='month']:checked"))
+        .map(cb => cb.value)
+        .join(", ");
 
-      doc.setFont("helvetica");
-      doc.setFontSize(12);
+      const today = new Date();
+      const dateStr = today.toLocaleDateString("gu-IN");
 
-      doc.text("Sarva Manglya Co-Operative Society", 10, 10);
-      doc.text(`તારીખ: ${date}`, 150, 10);
-      doc.text(`નામ: ${name}`, 10, 20);
-      doc.text(`ફ્લેટ નં.: ${flat}`, 10, 30);
-      doc.text(`સંપર્ક નં.: ${contact}`, 10, 40);
-      doc.text(`વર્ષ: ${year}`, 10, 50);
-      doc.text(`મહિના: ${months.join(", ")}`, 10, 60);
-      doc.text(`ચુકવણી રકમ: ₹${amount}`, 10, 70);
-      doc.text(`ચુકવણી પદ્ધતિ: ${mode}`, 10, 80);
-      doc.text(`ચુકવણી વિગતો: ${details}`, 10, 90);
+      const doc = new jsPDF();
+      doc.addFont("gujarati-font.ttf", "Gujarati", "normal");
+      doc.setFont("Gujarati");
+      doc.setFontSize(14);
 
-      doc.save("Payment-Receipt.pdf");
-    }
+      doc.text("સર્વ મંગલ્ય કો-ઓપ. સોસાયટી", 20, 20);
+      doc.text(`તારીખ: ${dateStr}`, 20, 30);
+      doc.text(`નામ: ${name}`, 20, 40);
+      doc.text(`ફ્લેટ નંબર: ${flat}`, 20, 50);
+      doc.text(`મોબાઇલ: ${contact}`, 20, 60);
+      doc.text(`વર્ષ: ${year}`, 20, 70);
+      doc.text(`મહિનો: ${months}`, 20, 80);
+      doc.text(`ચુકવણી રકમ: ₹${amount}`, 20, 90);
+      doc.text(`ચુકવણી પ્રકાર: ${paymentMode}`, 20, 100);
+      doc.text(`વિગતો: ${details}`, 20, 110);
+
+      doc.save(`Receipt_${flat}_${year}.pdf`);
+    });
   </script>
 </body>
 </html>
